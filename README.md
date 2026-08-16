@@ -8,7 +8,7 @@ frontend and a small Express backend that keeps your Anthropic API key server-si
 
 ```bash
 npm install
-export APP_SECRET=your-anthropic-api-key-here   # optional, only needed for AI Photo Estimate
+export ANTHROPIC_API_KEY=your-anthropic-api-key-here   # optional, only needed for AI Photo Estimate
 ```
 
 See `.env.example` for the required environment variable.
@@ -20,7 +20,7 @@ See `.env.example` for the required environment variable.
 1. Click the button above (or **Add New → Project** on vercel.com and import this repo). Vercel
    auto-detects the Vite frontend and picks up `api/estimate-photo.js` as a serverless function.
 2. Before the first deploy (or in **Project Settings → Environment Variables** afterward), add
-   `APP_SECRET` with your Anthropic API key.
+   `ANTHROPIC_API_KEY` with your Anthropic API key.
 3. Deploy. You get a permanent `*.vercel.app` URL — no starting anything each time, and it
    redeploys automatically on every push to `main`.
 
@@ -42,7 +42,7 @@ it's all client-side.
    this repo.
 2. Build settings: **Build command** `npm run build`, **Build output directory** `dist`
    (`wrangler.toml` already declares this and enables the `nodejs_compat` flag `functions/api/estimate-photo.js` needs).
-3. Add `APP_SECRET` as an environment variable/secret in the Pages project settings.
+3. Add `ANTHROPIC_API_KEY` as an environment variable/secret in the Pages project settings.
 4. Deploy. You get a permanent `*.pages.dev` URL, auto-redeployed on every push to `main`.
 
 Cloudflare's Workers runtime (which Pages Functions run on) bills by **CPU time actually used**,
@@ -64,7 +64,7 @@ test upload after deploying to confirm before relying on it.
 
 To enable AI Photo Estimate inside the Codespace, add your key as a secret **before** creating
 the codespace: repo **Settings → Secrets and variables → Codespaces → New repository secret**,
-named `APP_SECRET`. Without it, everything else still works — you'll just see a warning
+named `ANTHROPIC_API_KEY`. Without it, everything else still works — you'll just see a warning
 in the server log and AI Photo Estimate requests will fail.
 
 If you edit code inside the Codespace, either re-run `npm run build` and restart `npm start`,
