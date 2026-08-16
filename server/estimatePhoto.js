@@ -47,7 +47,7 @@ const ESTIMATE_SCHEMA = {
 let client;
 function getClient() {
   if (!client) {
-    client = new Anthropic({ apiKey: process.env.APP_SECRET });
+    client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
   }
   return client;
 }

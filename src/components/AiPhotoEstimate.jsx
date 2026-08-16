@@ -71,7 +71,7 @@ export default function AiPhotoEstimate({
       setStatus({ text: "", type: "" });
     } catch (err) {
       setStatus({
-        text: `Couldn't analyze photos: ${err.message}. Make sure the app is running via 'npm start' with APP_SECRET set.`,
+        text: `Couldn't analyze photos: ${err.message}. Make sure the app is running via 'npm start' with ANTHROPIC_API_KEY set.`,
         type: "error",
       });
     } finally {
