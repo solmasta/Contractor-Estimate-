@@ -102,7 +102,7 @@ export async function estimatePhoto(requestBody) {
       {
         type: "web_search_20260209",
         name: "web_search",
-        max_uses: 6,
+        max_uses: 4,
         allowed_domains: ["homedepot.com", "menards.com"],
         ...(pricingZip
           ? { user_location: { type: "approximate", city: "Chicago", region: "Illinois", country: "US" } }
