@@ -1,3 +1,12 @@
+// Numeric fields (hours, rate, qty, cost, markup %, tax %) never make sense
+// negative for a contractor estimate. Reject a negative value the instant a
+// full number is typed, rather than letting it silently flow into totals.
+export function clampNonNegative(value) {
+  const num = parseFloat(value);
+  if (!Number.isNaN(num) && num < 0) return "0";
+  return value;
+}
+
 export function laborRowTotal(row) {
   return (parseFloat(row.hours) || 0) * (parseFloat(row.rate) || 0);
 }

@@ -11,11 +11,21 @@ export function loadAutosave() {
 }
 
 export function saveAutosave(state) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    return true;
+  } catch (err) {
+    console.error("Failed to autosave estimate:", err);
+    return false;
+  }
 }
 
 export function clearAutosave() {
-  localStorage.removeItem(STORAGE_KEY);
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+  } catch (err) {
+    console.error("Failed to clear autosaved estimate:", err);
+  }
 }
 
 export function loadJobs() {
@@ -29,5 +39,11 @@ export function loadJobs() {
 }
 
 export function persistJobs(jobs) {
-  localStorage.setItem(JOBS_STORAGE_KEY, JSON.stringify(jobs));
+  try {
+    localStorage.setItem(JOBS_STORAGE_KEY, JSON.stringify(jobs));
+    return true;
+  } catch (err) {
+    console.error("Failed to save jobs list:", err);
+    return false;
+  }
 }

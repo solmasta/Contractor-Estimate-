@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { loadAutosave, saveAutosave, clearAutosave } from "../lib/storage";
 import {
   FIELD_IDS, emptyFields, emptyLaborRow, emptyMaterialRow,
@@ -53,10 +53,25 @@ export function useEstimate() {
   const [fields, setFieldsState] = useState(initial.fields);
   const [labor, setLabor] = useState(initial.labor);
   const [materials, setMaterials] = useState(initial.materials);
-  const [currentJobId, setCurrentJobId] = useState(null);
+  const [currentJobId, setCurrentJobIdState] = useState(null);
+  const [autosaveError, setAutosaveError] = useState(false);
+
+  // Mirrors currentJobId synchronously. React state updates don't apply until
+  // the next render, so a handler that fires twice in the same tick (e.g. a
+  // real double-click) would otherwise read a stale currentJobId both times.
+  // The ref lets getCurrentJobId() always return the latest value immediately.
+  const currentJobIdRef = useRef(null);
+
+  const setCurrentJobId = useCallback((id) => {
+    currentJobIdRef.current = id;
+    setCurrentJobIdState(id);
+  }, []);
+
+  const getCurrentJobId = useCallback(() => currentJobIdRef.current, []);
 
   useEffect(() => {
-    saveAutosave({ fields, labor, materials });
+    const ok = saveAutosave({ fields, labor, materials });
+    setAutosaveError(!ok);
   }, [fields, labor, materials]);
 
   const setField = useCallback((id, value) => {
@@ -110,14 +125,14 @@ export function useEstimate() {
     setFieldsState(fresh);
     setLabor([emptyLaborRow()]);
     setMaterials([emptyMaterialRow()]);
-  }, []);
+  }, [setCurrentJobId]);
 
   const loadFromJobState = useCallback((state, jobId) => {
     setFieldsState(normalizeFields(state.fields));
     setLabor(normalizeLaborRows(state.labor));
     setMaterials(normalizeMaterialRows(state.materials));
     setCurrentJobId(jobId);
-  }, []);
+  }, [setCurrentJobId]);
 
   const buildSnapshot = useCallback(() => ({ fields, labor, materials }), [fields, labor, materials]);
 
@@ -128,7 +143,8 @@ export function useEstimate() {
     updateLaborRow, updateMaterialRow,
     removeLaborRow, removeMaterialRow,
     totals,
-    currentJobId, setCurrentJobId,
+    currentJobId, setCurrentJobId, getCurrentJobId,
+    autosaveError,
     startNewJob, loadFromJobState, buildSnapshot,
   };
 }

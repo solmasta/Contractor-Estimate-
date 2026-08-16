@@ -1,5 +1,5 @@
 import { currency } from "../lib/format";
-import { laborRowTotal, materialRowTotal } from "../lib/calculations";
+import { laborRowTotal, materialRowTotal, clampNonNegative } from "../lib/calculations";
 
 export default function LineItemsSection({ title, kind, rows, onUpdate, onRemove, subtotal }) {
   const isLabor = kind === "labor";
@@ -35,14 +35,20 @@ export default function LineItemsSection({ title, kind, rows, onUpdate, onRemove
                   <input
                     type="number" min="0" step={isLabor ? "0.25" : "1"}
                     value={isLabor ? row.hours : row.qty}
-                    onChange={(e) => onUpdate(i, isLabor ? { hours: e.target.value } : { qty: e.target.value })}
+                    onChange={(e) => {
+                      const v = clampNonNegative(e.target.value);
+                      onUpdate(i, isLabor ? { hours: v } : { qty: v });
+                    }}
                   />
                 </td>
                 <td className="col-num" data-label={isLabor ? "Rate / hr" : "Unit Cost"}>
                   <input
                     type="number" min="0" step="0.01"
                     value={isLabor ? row.rate : row.cost}
-                    onChange={(e) => onUpdate(i, isLabor ? { rate: e.target.value } : { cost: e.target.value })}
+                    onChange={(e) => {
+                      const v = clampNonNegative(e.target.value);
+                      onUpdate(i, isLabor ? { rate: v } : { cost: v });
+                    }}
                   />
                 </td>
                 <td className="col-num line-total" data-label="Total">{currency(total)}</td>
