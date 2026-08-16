@@ -53,6 +53,21 @@
       <textarea id="jobDescription" rows="3" placeholder="Describe the work to be performed..."></textarea>
     </section>
 
+    <section class="ai-photo-section no-print">
+      <h2>AI Photo Estimate <span class="beta-tag">Beta</span></h2>
+      <p class="ai-hint">Upload photos of the job site and let AI suggest labor and material line items you can review and add below. Requires the app to be running via <code>npm start</code> with an Anthropic API key configured.</p>
+      <div class="ai-controls">
+        <label class="file-label" for="photoInput">Choose Photos</label>
+        <input type="file" id="photoInput" accept="image/*" multiple>
+        <div id="photoPreview" class="photo-preview"></div>
+        <label for="photoContext">Additional context (optional)</label>
+        <textarea id="photoContext" rows="2" placeholder="e.g. Kitchen remodel, replacing cabinets and countertops"></textarea>
+        <button type="button" id="analyzePhotosBtn" class="btn btn-primary">Analyze Photos with AI</button>
+        <div id="aiStatus" class="ai-status"></div>
+      </div>
+      <div id="aiResults" class="ai-results"></div>
+    </section>
+
     <section class="line-section">
       <h2>Labor</h2>
       <table class="line-table" id="laborTable">

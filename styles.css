@@ -126,6 +126,133 @@ input:focus, textarea:focus {
 
 textarea { resize: vertical; }
 
+.ai-photo-section {
+  margin-bottom: 24px;
+  padding: 16px;
+  border: 1px dashed var(--accent);
+  border-radius: 10px;
+  background: #f6faff;
+}
+
+.ai-photo-section h2 {
+  font-size: 1rem;
+  margin: 0 0 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.beta-tag {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-weight: 700;
+}
+
+.ai-hint {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin: 0 0 12px;
+}
+
+.ai-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 480px;
+}
+
+.file-label {
+  display: inline-block;
+  width: fit-content;
+  background: #e4e8ee;
+  color: var(--ink);
+  padding: 8px 14px;
+  border-radius: var(--radius);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.file-label:hover { background: #d5dbe4; }
+
+#photoInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.photo-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.photo-thumb {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+
+.ai-status {
+  font-size: 0.85rem;
+  color: var(--muted);
+  min-height: 1.2em;
+}
+
+.ai-status.ai-error { color: var(--danger); }
+.ai-status.ai-success { color: #1a7a3d; }
+
+.ai-results {
+  margin-top: 12px;
+}
+
+.ai-summary {
+  font-size: 0.9rem;
+  font-style: italic;
+  color: var(--ink);
+  margin: 0 0 12px;
+}
+
+.ai-suggestions {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.suggestion-group h3 {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  margin: 0 0 6px;
+}
+
+.suggestion-row {
+  display: grid;
+  grid-template-columns: auto 1fr 90px 90px;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.suggestion-row input[type="text"] {
+  margin-top: 0;
+}
+
+.suggestion-row input[type="number"] {
+  margin-top: 0;
+  text-align: right;
+}
+
 .line-section {
   margin-bottom: 24px;
 }

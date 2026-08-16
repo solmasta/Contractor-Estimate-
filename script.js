@@ -195,4 +195,220 @@
   }
 
   recalcAll();
+
+  // --- AI Photo Estimate ---
+
+  const photoInput = document.getElementById("photoInput");
+  const photoPreview = document.getElementById("photoPreview");
+  const photoContext = document.getElementById("photoContext");
+  const analyzeBtn = document.getElementById("analyzePhotosBtn");
+  const aiStatus = document.getElementById("aiStatus");
+  const aiResults = document.getElementById("aiResults");
+  const MAX_PHOTOS = 4;
+
+  let selectedPhotos = [];
+
+  function readFileAsDataURL(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  photoInput.addEventListener("change", async () => {
+    selectedPhotos = [];
+    photoPreview.innerHTML = "";
+    aiResults.innerHTML = "";
+    aiStatus.textContent = "";
+    aiStatus.className = "ai-status";
+
+    const files = Array.from(photoInput.files).slice(0, MAX_PHOTOS);
+    for (const file of files) {
+      const dataUrl = await readFileAsDataURL(file);
+      const match = dataUrl.match(/^data:(.+);base64,(.*)$/);
+      if (!match) continue;
+      const [, mediaType, data] = match;
+      selectedPhotos.push({ data, mediaType });
+
+      const img = document.createElement("img");
+      img.src = dataUrl;
+      img.className = "photo-thumb";
+      img.alt = file.name;
+      img.title = file.name;
+      photoPreview.appendChild(img);
+    }
+  });
+
+  analyzeBtn.addEventListener("click", async () => {
+    if (selectedPhotos.length === 0) {
+      aiStatus.textContent = "Choose at least one photo first.";
+      aiStatus.className = "ai-status ai-error";
+      return;
+    }
+
+    aiStatus.textContent = "Analyzing photos...";
+    aiStatus.className = "ai-status";
+    aiResults.innerHTML = "";
+    analyzeBtn.disabled = true;
+
+    try {
+      const res = await fetch("/api/estimate-photo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          images: selectedPhotos,
+          context: photoContext.value.trim(),
+        }),
+      });
+
+      const payload = await res.json();
+      if (!res.ok) {
+        throw new Error(payload.error || "Request failed");
+      }
+
+      renderAiResults(payload);
+      aiStatus.textContent = "";
+    } catch (err) {
+      aiStatus.textContent =
+        "Couldn't analyze photos: " + err.message +
+        ". Make sure the app is running via 'npm start' with ANTHROPIC_API_KEY set.";
+      aiStatus.className = "ai-status ai-error";
+    } finally {
+      analyzeBtn.disabled = false;
+    }
+  });
+
+  function buildSuggestionRow(item, kind) {
+    const row = document.createElement("div");
+    row.className = "suggestion-row";
+    row.dataset.kind = kind;
+
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.checked = true;
+    row.appendChild(checkbox);
+
+    const desc = document.createElement("input");
+    desc.type = "text";
+    desc.className = "s-desc";
+    desc.value = item.description || "";
+    row.appendChild(desc);
+
+    if (kind === "labor") {
+      const hours = document.createElement("input");
+      hours.type = "number";
+      hours.className = "s-hours";
+      hours.step = "0.25";
+      hours.min = "0";
+      hours.value = item.hours ?? 0;
+      row.appendChild(hours);
+
+      const rate = document.createElement("input");
+      rate.type = "number";
+      rate.className = "s-rate";
+      rate.step = "0.01";
+      rate.min = "0";
+      rate.value = item.rate ?? 0;
+      row.appendChild(rate);
+    } else {
+      const qty = document.createElement("input");
+      qty.type = "number";
+      qty.className = "s-qty";
+      qty.step = "1";
+      qty.min = "0";
+      qty.value = item.qty ?? 0;
+      row.appendChild(qty);
+
+      const cost = document.createElement("input");
+      cost.type = "number";
+      cost.className = "s-cost";
+      cost.step = "0.01";
+      cost.min = "0";
+      cost.value = item.unitCost ?? 0;
+      row.appendChild(cost);
+    }
+
+    return row;
+  }
+
+  function buildSuggestionGroup(title, items, kind) {
+    const wrap = document.createElement("div");
+    wrap.className = "suggestion-group";
+
+    const h3 = document.createElement("h3");
+    h3.textContent = title;
+    wrap.appendChild(h3);
+
+    items.forEach((item) => wrap.appendChild(buildSuggestionRow(item, kind)));
+
+    return wrap;
+  }
+
+  function renderAiResults(payload) {
+    aiResults.innerHTML = "";
+
+    if (payload.summary) {
+      const p = document.createElement("p");
+      p.className = "ai-summary";
+      p.textContent = payload.summary;
+      aiResults.appendChild(p);
+    }
+
+    const laborItems = payload.labor || [];
+    const materialItems = payload.materials || [];
+
+    if (laborItems.length === 0 && materialItems.length === 0) {
+      const p = document.createElement("p");
+      p.textContent = "No suggestions found for these photos.";
+      aiResults.appendChild(p);
+      return;
+    }
+
+    const suggestionsWrap = document.createElement("div");
+    suggestionsWrap.className = "ai-suggestions";
+
+    if (laborItems.length) {
+      suggestionsWrap.appendChild(buildSuggestionGroup("Suggested Labor", laborItems, "labor"));
+    }
+    if (materialItems.length) {
+      suggestionsWrap.appendChild(buildSuggestionGroup("Suggested Materials", materialItems, "material"));
+    }
+
+    aiResults.appendChild(suggestionsWrap);
+
+    const addBtn = document.createElement("button");
+    addBtn.type = "button";
+    addBtn.className = "btn btn-primary";
+    addBtn.textContent = "Add Selected to Estimate";
+    addBtn.addEventListener("click", () => {
+      let addedCount = 0;
+      suggestionsWrap.querySelectorAll(".suggestion-row").forEach((row) => {
+        const checkbox = row.querySelector("input[type=checkbox]");
+        if (!checkbox.checked) return;
+        const kind = row.dataset.kind;
+        const desc = row.querySelector(".s-desc").value;
+
+        if (kind === "labor") {
+          const hours = parseFloat(row.querySelector(".s-hours").value) || 0;
+          const rate = parseFloat(row.querySelector(".s-rate").value) || 0;
+          addLaborRow({ desc, hours, rate });
+        } else {
+          const qty = parseFloat(row.querySelector(".s-qty").value) || 0;
+          const cost = parseFloat(row.querySelector(".s-cost").value) || 0;
+          addMaterialRow({ desc, qty, cost });
+        }
+        addedCount++;
+      });
+
+      recalcAll();
+      aiStatus.textContent = addedCount > 0
+        ? `Added ${addedCount} item(s) to the estimate below.`
+        : "No items were selected.";
+      aiStatus.className = addedCount > 0 ? "ai-status ai-success" : "ai-status ai-error";
+    });
+
+    aiResults.appendChild(addBtn);
+  }
 })();
