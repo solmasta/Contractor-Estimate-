@@ -24,26 +24,26 @@ export function useJobs() {
 
     const current = loadJobs();
     const existingIdx = existingId ? current.findIndex((j) => j.id === existingId) : -1;
-    let id = existingId;
+    const id = existingIdx >= 0 ? existingId : generateJobId();
 
     if (existingIdx >= 0) {
       current[existingIdx] = {
         ...current[existingIdx], ...summary, state: snapshot, savedAt: new Date().toISOString(),
       };
     } else {
-      id = generateJobId();
       current.push({ id, ...summary, state: snapshot, savedAt: new Date().toISOString() });
     }
 
-    persistJobs(current);
-    setJobs(current);
-    return id;
+    const ok = persistJobs(current);
+    if (ok) setJobs(current);
+    return { id, ok };
   }, []);
 
   const deleteJob = useCallback((id) => {
     const next = loadJobs().filter((j) => j.id !== id);
-    persistJobs(next);
-    setJobs(next);
+    const ok = persistJobs(next);
+    if (ok) setJobs(next);
+    return ok;
   }, []);
 
   return { jobs, saveJob, deleteJob };

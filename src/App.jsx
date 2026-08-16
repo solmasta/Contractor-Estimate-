@@ -15,7 +15,12 @@ export default function App() {
   const estimate = useEstimate();
   const { jobs, saveJob, deleteJob } = useJobs();
   const [jobsPanelOpen, setJobsPanelOpen] = useState(false);
-  const [jobStatus, setJobStatus] = useState("");
+  const [jobStatus, setJobStatus] = useState({ text: "", tone: "success" });
+  // Bumped on New Job / Open Job so <AiPhotoEstimate key={...}> remounts and
+  // drops any leftover photos/suggestions from the job that was just left —
+  // otherwise "Add Selected to Estimate" could add a previous job's AI
+  // suggestions into the new one.
+  const [aiPanelResetKey, setAiPanelResetKey] = useState(0);
 
   const handleNewJob = useCallback(() => {
     const confirmed = window.confirm(
@@ -23,28 +28,47 @@ export default function App() {
     );
     if (!confirmed) return;
     estimate.startNewJob();
-    setJobStatus("");
+    setJobStatus({ text: "", tone: "success" });
+    setAiPanelResetKey((k) => k + 1);
   }, [estimate]);
 
   const handleSaveJob = useCallback(() => {
     const snapshot = estimate.buildSnapshot();
-    const id = saveJob(snapshot, estimate.currentJobId);
+    const { id, ok } = saveJob(snapshot, estimate.getCurrentJobId());
+    if (!ok) {
+      setJobStatus({
+        text: "Couldn't save this job — your browser's storage is full or unavailable. Try deleting old jobs.",
+        tone: "error",
+      });
+      return;
+    }
     estimate.setCurrentJobId(id);
     const { jobCategory, clientName } = snapshot.fields;
-    setJobStatus(`Saved${jobCategory ? " " + jobCategory : ""} job${clientName ? " for " + clientName : ""}.`);
+    setJobStatus({
+      text: `Saved${jobCategory ? " " + jobCategory : ""} job${clientName ? " for " + clientName : ""}.`,
+      tone: "success",
+    });
   }, [estimate, saveJob]);
 
   const handleOpenJob = useCallback((job) => {
     estimate.loadFromJobState(job.state, job.id);
     setJobsPanelOpen(false);
-    setJobStatus(`Opened "${job.clientName || job.category || "job"}".`);
+    setJobStatus({ text: `Opened "${job.clientName || job.category || "job"}".`, tone: "success" });
+    setAiPanelResetKey((k) => k + 1);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [estimate]);
 
   const handleDeleteJob = useCallback((id) => {
     if (!window.confirm("Delete this saved job? This cannot be undone.")) return;
-    deleteJob(id);
-    if (estimate.currentJobId === id) estimate.setCurrentJobId(null);
+    const ok = deleteJob(id);
+    if (!ok) {
+      setJobStatus({
+        text: "Couldn't delete this job — your browser's storage is unavailable.",
+        tone: "error",
+      });
+      return;
+    }
+    if (estimate.getCurrentJobId() === id) estimate.setCurrentJobId(null);
   }, [deleteJob, estimate]);
 
   return (
@@ -58,7 +82,14 @@ export default function App() {
         onNewJob={handleNewJob}
       />
 
-      <JobStatusBanner message={jobStatus} />
+      <JobStatusBanner message={jobStatus.text} tone={jobStatus.tone} />
+
+      {estimate.autosaveError && (
+        <div className="storage-warning no-print">
+          Your browser's storage is full or unavailable — changes to this estimate aren't being
+          saved automatically. Delete old jobs or free up storage, then keep working.
+        </div>
+      )}
 
       {jobsPanelOpen && (
         <JobsPanel
@@ -79,6 +110,7 @@ export default function App() {
         />
 
         <AiPhotoEstimate
+          key={aiPanelResetKey}
           marketArea={estimate.fields.marketArea}
           pricingZip={estimate.fields.pricingZip}
           onSetMarketArea={(v) => estimate.setField("marketArea", v)}

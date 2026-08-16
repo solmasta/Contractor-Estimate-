@@ -1,4 +1,5 @@
 import { currency } from "../lib/format";
+import { clampNonNegative } from "../lib/calculations";
 
 export default function TotalsPanel({ fields, setField, totals }) {
   return (
@@ -20,7 +21,7 @@ export default function TotalsPanel({ fields, setField, totals }) {
           <label htmlFor="markupPct">Markup / Overhead &amp; Profit (%)</label>
           <input
             id="markupPct" type="number" min="0" step="0.1"
-            value={fields.markupPct} onChange={(e) => setField("markupPct", e.target.value)}
+            value={fields.markupPct} onChange={(e) => setField("markupPct", clampNonNegative(e.target.value))}
           />
         </div>
         <div className="totals-row">
@@ -31,7 +32,7 @@ export default function TotalsPanel({ fields, setField, totals }) {
           <label htmlFor="taxPct">Sales Tax (%)</label>
           <input
             id="taxPct" type="number" min="0" step="0.1"
-            value={fields.taxPct} onChange={(e) => setField("taxPct", e.target.value)}
+            value={fields.taxPct} onChange={(e) => setField("taxPct", clampNonNegative(e.target.value))}
           />
         </div>
         <div className="totals-row">

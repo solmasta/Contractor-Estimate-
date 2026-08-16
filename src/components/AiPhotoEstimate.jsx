@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { analyzePhotos } from "../lib/api";
+import { clampNonNegative } from "../lib/calculations";
 
 const MAX_PHOTOS = 4;
 
@@ -175,11 +176,11 @@ export default function AiPhotoEstimate({
                         />
                         <input
                           type="number" min="0" step="0.25" value={s.hours}
-                          onChange={(e) => updateSuggestion(s.id, { hours: e.target.value })}
+                          onChange={(e) => updateSuggestion(s.id, { hours: clampNonNegative(e.target.value) })}
                         />
                         <input
                           type="number" min="0" step="0.01" value={s.rate}
-                          onChange={(e) => updateSuggestion(s.id, { rate: e.target.value })}
+                          onChange={(e) => updateSuggestion(s.id, { rate: clampNonNegative(e.target.value) })}
                         />
                       </div>
                     ))}
@@ -202,11 +203,11 @@ export default function AiPhotoEstimate({
                           />
                           <input
                             type="number" min="0" step="1" value={s.qty}
-                            onChange={(e) => updateSuggestion(s.id, { qty: e.target.value })}
+                            onChange={(e) => updateSuggestion(s.id, { qty: clampNonNegative(e.target.value) })}
                           />
                           <input
                             type="number" min="0" step="0.01" value={s.unitCost}
-                            onChange={(e) => updateSuggestion(s.id, { unitCost: e.target.value })}
+                            onChange={(e) => updateSuggestion(s.id, { unitCost: clampNonNegative(e.target.value) })}
                           />
                         </div>
                         {s.source && (
