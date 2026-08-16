@@ -1,0 +1,14 @@
+{
+  "name": "contractor-estimate",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Contractor job estimate builder with AI-assisted photo estimates",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.117.1",
+    "express": "^5.2.1"
+  }
+}
