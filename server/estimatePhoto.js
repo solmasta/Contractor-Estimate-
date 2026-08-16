@@ -95,7 +95,7 @@ export async function estimatePhoto(requestBody) {
     model: "claude-sonnet-5",
     max_tokens: 4096,
     output_config: {
-      effort: "medium",
+      effort: "low",
       format: { type: "json_schema", schema: ESTIMATE_SCHEMA },
     },
     tools: [
