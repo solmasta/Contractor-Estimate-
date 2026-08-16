@@ -92,10 +92,10 @@ export async function estimatePhoto(requestBody) {
     .join("\n");
 
   const requestParams = {
-    model: "claude-opus-5",
+    model: "claude-sonnet-5",
     max_tokens: 4096,
     output_config: {
-      effort: "high",
+      effort: "medium",
       format: { type: "json_schema", schema: ESTIMATE_SCHEMA },
     },
     tools: [
@@ -122,7 +122,7 @@ export async function estimatePhoto(requestBody) {
     // 10 iterations; if a lot of searching was needed, resume automatically
     // rather than returning a truncated mid-search response.
     let resumes = 0;
-    while (response.stop_reason === "pause_turn" && resumes < 3) {
+    while (response.stop_reason === "pause_turn" && resumes < 1) {
       response = await getClient().messages.create({
         ...requestParams,
         messages: [userMessage, { role: "assistant", content: response.content }],
