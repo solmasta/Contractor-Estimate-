@@ -198,23 +198,34 @@ export default function AiPhotoEstimate({
                   <div className="suggestion-group">
                     <h3>Suggested Labor</h3>
                     {laborSuggestions.map((s) => (
-                      <div className="suggestion-row" key={s.id}>
-                        <input
-                          type="checkbox" checked={s.checked}
-                          onChange={(e) => updateSuggestion(s.id, { checked: e.target.checked })}
-                        />
-                        <input
-                          type="text" value={s.description}
-                          onChange={(e) => updateSuggestion(s.id, { description: e.target.value })}
-                        />
-                        <input
-                          type="number" min="0" step="0.25" value={s.hours}
-                          onChange={(e) => updateSuggestion(s.id, { hours: clampNonNegative(e.target.value) })}
-                        />
-                        <input
-                          type="number" min="0" step="0.01" value={s.rate}
-                          onChange={(e) => updateSuggestion(s.id, { rate: clampNonNegative(e.target.value) })}
-                        />
+                      <div className="suggestion-card" key={s.id}>
+                        <div className="suggestion-card-header">
+                          <input
+                            type="checkbox" checked={s.checked}
+                            onChange={(e) => updateSuggestion(s.id, { checked: e.target.checked })}
+                          />
+                          <input
+                            type="text" className="suggestion-desc" placeholder="Description"
+                            value={s.description}
+                            onChange={(e) => updateSuggestion(s.id, { description: e.target.value })}
+                          />
+                        </div>
+                        <div className="suggestion-fields">
+                          <label className="suggestion-field">
+                            <span>Hours</span>
+                            <input
+                              type="number" min="0" step="0.25" value={s.hours}
+                              onChange={(e) => updateSuggestion(s.id, { hours: clampNonNegative(e.target.value) })}
+                            />
+                          </label>
+                          <label className="suggestion-field">
+                            <span>Rate / hr</span>
+                            <input
+                              type="number" min="0" step="0.01" value={s.rate}
+                              onChange={(e) => updateSuggestion(s.id, { rate: clampNonNegative(e.target.value) })}
+                            />
+                          </label>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -224,24 +235,33 @@ export default function AiPhotoEstimate({
                   <div className="suggestion-group">
                     <h3>Suggested Materials</h3>
                     {materialSuggestions.map((s) => (
-                      <div key={s.id}>
-                        <div className="suggestion-row">
+                      <div className="suggestion-card" key={s.id}>
+                        <div className="suggestion-card-header">
                           <input
                             type="checkbox" checked={s.checked}
                             onChange={(e) => updateSuggestion(s.id, { checked: e.target.checked })}
                           />
                           <input
-                            type="text" value={s.description}
+                            type="text" className="suggestion-desc" placeholder="Description"
+                            value={s.description}
                             onChange={(e) => updateSuggestion(s.id, { description: e.target.value })}
                           />
-                          <input
-                            type="number" min="0" step="1" value={s.qty}
-                            onChange={(e) => updateSuggestion(s.id, { qty: clampNonNegative(e.target.value) })}
-                          />
-                          <input
-                            type="number" min="0" step="0.01" value={s.unitCost}
-                            onChange={(e) => updateSuggestion(s.id, { unitCost: clampNonNegative(e.target.value) })}
-                          />
+                        </div>
+                        <div className="suggestion-fields">
+                          <label className="suggestion-field">
+                            <span>Qty</span>
+                            <input
+                              type="number" min="0" step="1" value={s.qty}
+                              onChange={(e) => updateSuggestion(s.id, { qty: clampNonNegative(e.target.value) })}
+                            />
+                          </label>
+                          <label className="suggestion-field">
+                            <span>Unit Cost</span>
+                            <input
+                              type="number" min="0" step="0.01" value={s.unitCost}
+                              onChange={(e) => updateSuggestion(s.id, { unitCost: clampNonNegative(e.target.value) })}
+                            />
+                          </label>
                         </div>
                         {s.source && (
                           <div className="suggestion-source">
