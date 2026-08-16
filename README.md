@@ -36,6 +36,24 @@ See `.env.example` for the required environment variable.
 The rest of the app (labor/materials, totals, job tracking, print) has no such constraints —
 it's all client-side.
 
+## Deploy to Cloudflare Pages (alternative permanent link)
+
+1. On the Cloudflare dashboard: **Workers & Pages → Create → Pages → Connect to Git**, and pick
+   this repo.
+2. Build settings: **Build command** `npm run build`, **Build output directory** `dist`
+   (`wrangler.toml` already declares this and enables the `nodejs_compat` flag `functions/api/estimate-photo.js` needs).
+3. Add `APP_SECRET` as an environment variable/secret in the Pages project settings.
+4. Deploy. You get a permanent `*.pages.dev` URL, auto-redeployed on every push to `main`.
+
+Cloudflare's Workers runtime (which Pages Functions run on) bills by **CPU time actually used**,
+not wall-clock time — and this endpoint spends almost all of its time waiting on Anthropic's API
+(vision + web search), not computing. That's a better fit for this workload than Vercel's
+wall-clock timeout, and Cloudflare's request body limits are also more generous, so multi-photo
+uploads are less likely to hit a hard cap. That said, **I haven't been able to actually deploy
+and test this myself** (no Cloudflare account access from here) — I've verified the Anthropic SDK
+has no direct Node-only dependencies in the code path this app uses, but you should do one real
+test upload after deploying to confirm before relying on it.
+
 ## Run in GitHub Codespaces (quickest way to see it live)
 
 1. On GitHub, click **Code → Codespaces → Create codespace on main**.

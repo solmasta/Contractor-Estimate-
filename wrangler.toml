@@ -1,0 +1,4 @@
+name = "contractor-estimate"
+pages_build_output_dir = "dist"
+compatibility_date = "2026-08-01"
+compatibility_flags = ["nodejs_compat"]
