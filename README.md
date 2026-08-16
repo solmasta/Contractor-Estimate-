@@ -38,12 +38,36 @@ it's all client-side.
 
 ## Deploy to Cloudflare Pages (alternative permanent link)
 
+Pick **one** of the two options below, not both — running both at once means every push
+triggers two competing deploys of the same project.
+
+### Option A: Cloudflare dashboard (simplest)
+
 1. On the Cloudflare dashboard: **Workers & Pages → Create → Pages → Connect to Git**, and pick
    this repo.
 2. Build settings: **Build command** `npm run build`, **Build output directory** `dist`
    (`wrangler.toml` already declares this and enables the `nodejs_compat` flag `functions/api/estimate-photo.js` needs).
 3. Add `ANTHROPIC_API_KEY` as an environment variable/secret in the Pages project settings.
 4. Deploy. You get a permanent `*.pages.dev` URL, auto-redeployed on every push to `main`.
+
+### Option B: GitHub Actions workflow
+
+`.github/workflows/deploy-cloudflare.yml` builds the app and deploys it with `wrangler pages
+deploy` on every push to `main`, using the project name `contractor-estimate` from
+`wrangler.toml`. To use it:
+
+1. Create a Cloudflare API token at **My Profile → API Tokens → Create Token**, using the
+   **Edit Cloudflare Workers** template (or a custom token with Pages edit permission).
+2. Find your **Account ID** on the Cloudflare dashboard's right sidebar (any Workers & Pages page).
+3. In the GitHub repo: **Settings → Secrets and variables → Actions → New repository secret**,
+   add `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` with those two values.
+4. If the `contractor-estimate` Pages project doesn't exist yet, the first workflow run creates
+   it automatically on first deploy.
+5. Add `ANTHROPIC_API_KEY` as an environment variable/secret in the Pages project settings
+   (**Workers & Pages → contractor-estimate → Settings**) — this is separate from the GitHub
+   Actions secrets above, since it's read by the deployed Function at runtime, not by the
+   workflow.
+6. Push to `main` (or run the workflow manually from the **Actions** tab) to trigger a deploy.
 
 Cloudflare's Workers runtime (which Pages Functions run on) bills by **CPU time actually used**,
 not wall-clock time — and this endpoint spends almost all of its time waiting on Anthropic's API
