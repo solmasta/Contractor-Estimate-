@@ -10,8 +10,10 @@
     "companyName", "companyContact", "companyAddress",
     "clientName", "jobAddress", "clientContact",
     "estimateNumber", "estimateDate", "validUntil",
-    "jobDescription", "notes", "markupPct", "taxPct"
+    "jobDescription", "notes", "markupPct", "taxPct", "marketArea"
   ];
+
+  const DEFAULT_MARKET_AREA = "Chicagoland (Chicago Metro Area), IL";
 
   const currency = (n) =>
     n.toLocaleString("en-US", { style: "currency", currency: "USD" });
@@ -155,7 +157,13 @@
     localStorage.removeItem(STORAGE_KEY);
     fields.forEach((id) => {
       const el = document.getElementById(id);
-      el.value = id === "markupPct" || id === "taxPct" ? "0" : "";
+      if (id === "markupPct" || id === "taxPct") {
+        el.value = "0";
+      } else if (id === "marketArea") {
+        el.value = DEFAULT_MARKET_AREA;
+      } else {
+        el.value = "";
+      }
     });
     laborBody.innerHTML = "";
     materialBody.innerHTML = "";
@@ -192,6 +200,11 @@
     if (!dateField.value) {
       dateField.value = new Date().toISOString().slice(0, 10);
     }
+  }
+
+  const marketAreaField = document.getElementById("marketArea");
+  if (!marketAreaField.value.trim()) {
+    marketAreaField.value = DEFAULT_MARKET_AREA;
   }
 
   recalcAll();
@@ -260,6 +273,7 @@
         body: JSON.stringify({
           images: selectedPhotos,
           context: photoContext.value.trim(),
+          marketArea: document.getElementById("marketArea").value.trim(),
         }),
       });
 

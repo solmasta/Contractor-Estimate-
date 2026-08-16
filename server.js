@@ -53,7 +53,7 @@ const ESTIMATE_SCHEMA = {
 
 app.post("/api/estimate-photo", async (req, res) => {
   try {
-    const { images, context } = req.body || {};
+    const { images, context, marketArea } = req.body || {};
 
     if (!Array.isArray(images) || images.length === 0) {
       return res.status(400).json({ error: "At least one photo is required." });
@@ -75,7 +75,10 @@ app.post("/api/estimate-photo", async (req, res) => {
     const promptText = [
       "You are helping a contractor prepare a job estimate from photos of a job site.",
       "Look at the photo(s) and identify the work that needs to be done.",
-      "Suggest realistic labor line items (a short description, estimated hours, and a reasonable market hourly rate in USD) and material line items (a short description, estimated quantity, and a reasonable market unit cost in USD).",
+      "Suggest realistic labor line items (a short description, estimated hours, and a reasonable hourly rate in USD) and material line items (a short description, estimated quantity, and a reasonable unit cost in USD).",
+      marketArea
+        ? `Price labor and materials for the ${marketArea} market specifically - use current local rates for that area, not generic national averages.`
+        : "",
       "Base your estimate on what is visibly needed. Keep line items concise and specific to what you see - do not invent work that isn't shown.",
       context ? `Additional context from the contractor: ${context}` : "",
     ]
