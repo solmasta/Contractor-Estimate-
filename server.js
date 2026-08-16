@@ -13,7 +13,7 @@ const app = express();
 app.use(express.json({ limit: "30mb" }));
 app.use(express.static(DIST_DIR));
 
-const client = new Anthropic();
+const client = new Anthropic({ apiKey: process.env.APP_SECRET });
 
 const ESTIMATE_SCHEMA = {
   type: "object",
@@ -153,8 +153,8 @@ app.post("/api/estimate-photo", async (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Contractor Estimate app running at http://localhost:${PORT}`);
-  if (!process.env.ANTHROPIC_API_KEY) {
-    console.warn("Warning: ANTHROPIC_API_KEY is not set. AI photo estimates will fail until it is configured.");
+  if (!process.env.APP_SECRET) {
+    console.warn("Warning: APP_SECRET is not set. AI photo estimates will fail until it is configured.");
   }
   if (!fs.existsSync(DIST_DIR)) {
     console.warn('Warning: no "dist" build found. Run `npm run build` first, or use `npm run dev` for local development.');
