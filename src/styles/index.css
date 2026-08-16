@@ -521,21 +521,56 @@ textarea { resize: vertical; }
   margin: 0 0 8px;
 }
 
-.suggestion-row {
-  display: grid;
-  grid-template-columns: auto 1fr 90px 90px;
-  gap: 8px;
-  align-items: center;
-  margin-bottom: 6px;
+.suggestion-card {
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-md);
+  background: var(--panel-raised);
+  padding: 12px;
+  margin-bottom: 10px;
 }
 
-.suggestion-row input[type="text"], .suggestion-row input[type="number"] { margin-top: 0; }
-.suggestion-row input[type="number"] { text-align: right; }
+.suggestion-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.suggestion-card-header input[type="checkbox"] {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+}
+
+.suggestion-desc { flex: 1; margin-top: 0; font-weight: 600; }
+
+.suggestion-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.suggestion-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.suggestion-field span {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.suggestion-field input[type="number"] { margin-top: 0; text-align: left; width: 100%; }
 
 .suggestion-source {
   font-size: 0.72rem;
   color: var(--muted);
-  margin: -2px 0 8px 26px;
+  margin-top: 8px;
 }
 
 /* ---------- Line item tables ---------- */
@@ -629,7 +664,10 @@ textarea { resize: vertical; }
 @media (max-width: 720px) {
   .estimate-meta { grid-template-columns: 1fr; }
   .estimate { padding: 20px; }
-  .suggestion-row { grid-template-columns: auto 1fr; }
+}
+
+@media (max-width: 420px) {
+  .suggestion-fields { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 640px) {
