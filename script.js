@@ -9,12 +9,15 @@
   const fields = [
     "companyName", "companyContact", "companyAddress",
     "clientName", "jobAddress", "clientContact",
-    "estimateNumber", "estimateDate", "validUntil",
+    "estimateNumber", "estimateDate", "validUntil", "jobCategory",
     "jobDescription", "notes", "markupPct", "taxPct", "marketArea", "pricingZip"
   ];
 
   const DEFAULT_MARKET_AREA = "Chicagoland (Chicago Metro Area), IL";
   const DEFAULT_PRICING_ZIP = "60463";
+  const JOBS_STORAGE_KEY = "contractorEstimateJobsList";
+
+  let currentJobId = null;
 
   const currency = (n) =>
     n.toLocaleString("en-US", { style: "currency", currency: "USD" });
@@ -104,7 +107,7 @@
     saveState();
   }
 
-  function saveState() {
+  function buildStateSnapshot() {
     const state = { fields: {}, labor: [], materials: [] };
 
     fields.forEach((id) => {
@@ -127,7 +130,23 @@
       });
     });
 
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    return state;
+  }
+
+  function saveState() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(buildStateSnapshot()));
+  }
+
+  function applyStateToForm(state) {
+    fields.forEach((id) => {
+      const el = document.getElementById(id);
+      el.value = state.fields && state.fields[id] !== undefined ? state.fields[id] : "";
+    });
+
+    laborBody.innerHTML = "";
+    materialBody.innerHTML = "";
+    (state.labor || []).forEach((item) => addLaborRow(item));
+    (state.materials || []).forEach((item) => addMaterialRow(item));
   }
 
   function loadState() {
@@ -141,21 +160,15 @@
       return false;
     }
 
-    fields.forEach((id) => {
-      if (state.fields && state.fields[id] !== undefined) {
-        document.getElementById(id).value = state.fields[id];
-      }
-    });
-
-    (state.labor || []).forEach((item) => addLaborRow(item));
-    (state.materials || []).forEach((item) => addMaterialRow(item));
+    applyStateToForm(state);
 
     return (state.labor && state.labor.length > 0) || (state.materials && state.materials.length > 0);
   }
 
   function resetAll() {
-    if (!confirm("Clear this estimate and start over?")) return;
+    if (!confirm("Start a new job? Any unsaved changes to the current form will be lost (use \"Save Job\" first if you want to keep them).")) return;
     localStorage.removeItem(STORAGE_KEY);
+    currentJobId = null;
     fields.forEach((id) => {
       const el = document.getElementById(id);
       if (id === "markupPct" || id === "taxPct") {
@@ -173,6 +186,7 @@
     addLaborRow();
     addMaterialRow();
     recalcAll();
+    updateJobStatus("");
   }
 
   document.getElementById("addLaborRow").addEventListener("click", () => {
@@ -215,6 +229,199 @@
   }
 
   recalcAll();
+
+  // --- Job Management (My Jobs) ---
+
+  const myJobsBtn = document.getElementById("myJobsBtn");
+  const saveJobBtn = document.getElementById("saveJobBtn");
+  const jobsPanel = document.getElementById("jobsPanel");
+  const jobsList = document.getElementById("jobsList");
+  const jobsFilter = document.getElementById("jobsFilter");
+  const closeJobsPanel = document.getElementById("closeJobsPanel");
+  const jobStatus = document.getElementById("jobStatus");
+
+  function loadJobs() {
+    try {
+      const raw = localStorage.getItem(JOBS_STORAGE_KEY);
+      const jobs = raw ? JSON.parse(raw) : [];
+      return Array.isArray(jobs) ? jobs : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function persistJobs(jobs) {
+    localStorage.setItem(JOBS_STORAGE_KEY, JSON.stringify(jobs));
+  }
+
+  function generateJobId() {
+    return window.crypto && crypto.randomUUID
+      ? crypto.randomUUID()
+      : "job-" + Date.now() + "-" + Math.random().toString(36).slice(2, 8);
+  }
+
+  function calcGrandTotalFromState(state) {
+    const laborTotal = (state.labor || []).reduce(
+      (sum, l) => sum + (parseFloat(l.hours) || 0) * (parseFloat(l.rate) || 0), 0
+    );
+    const materialTotal = (state.materials || []).reduce(
+      (sum, m) => sum + (parseFloat(m.qty) || 0) * (parseFloat(m.cost) || 0), 0
+    );
+    const subtotal = laborTotal + materialTotal;
+    const markupPct = parseFloat(state.fields.markupPct) || 0;
+    const taxPct = parseFloat(state.fields.taxPct) || 0;
+    const markupAmount = subtotal * (markupPct / 100);
+    const taxableBase = subtotal + markupAmount;
+    const taxAmount = taxableBase * (taxPct / 100);
+    return taxableBase + taxAmount;
+  }
+
+  function updateJobStatus(message) {
+    jobStatus.textContent = message || "";
+  }
+
+  function refreshJobsFilterOptions(jobs) {
+    const categories = Array.from(new Set(jobs.map((j) => j.category).filter(Boolean))).sort();
+    const current = jobsFilter.value;
+    jobsFilter.innerHTML = '<option value="">All Categories</option>';
+    categories.forEach((cat) => {
+      const opt = document.createElement("option");
+      opt.value = cat;
+      opt.textContent = cat;
+      jobsFilter.appendChild(opt);
+    });
+    if (categories.includes(current)) {
+      jobsFilter.value = current;
+    }
+  }
+
+  function renderJobsList() {
+    const allJobs = loadJobs();
+    refreshJobsFilterOptions(allJobs);
+
+    const filter = jobsFilter.value;
+    const jobs = allJobs
+      .filter((j) => !filter || j.category === filter)
+      .sort((a, b) => new Date(b.savedAt) - new Date(a.savedAt));
+
+    jobsList.innerHTML = "";
+
+    if (jobs.length === 0) {
+      const p = document.createElement("p");
+      p.className = "jobs-empty";
+      p.textContent = allJobs.length === 0
+        ? 'No saved jobs yet. Fill out an estimate, pick a category, and click "Save Job".'
+        : "No jobs in this category.";
+      jobsList.appendChild(p);
+      return;
+    }
+
+    jobs.forEach((job) => {
+      const card = document.createElement("div");
+      card.className = "job-card" + (job.id === currentJobId ? " job-card-active" : "");
+
+      const info = document.createElement("div");
+      info.className = "job-card-info";
+
+      const titleRow = document.createElement("div");
+      titleRow.className = "job-card-title";
+      if (job.category) {
+        const tag = document.createElement("span");
+        tag.className = "category-tag";
+        tag.textContent = job.category;
+        titleRow.appendChild(tag);
+      }
+      const name = document.createElement("span");
+      name.textContent = job.clientName || job.estimateNumber || "Untitled Job";
+      titleRow.appendChild(name);
+      info.appendChild(titleRow);
+
+      const meta = document.createElement("div");
+      meta.className = "job-card-meta";
+      const savedDate = job.savedAt ? new Date(job.savedAt).toLocaleDateString() : "";
+      meta.textContent = [job.jobAddress, currency(job.total || 0), savedDate].filter(Boolean).join(" · ");
+      info.appendChild(meta);
+
+      card.appendChild(info);
+
+      const actions = document.createElement("div");
+      actions.className = "job-card-actions";
+
+      const openBtn = document.createElement("button");
+      openBtn.type = "button";
+      openBtn.className = "btn btn-secondary";
+      openBtn.textContent = "Open";
+      openBtn.addEventListener("click", () => openJob(job.id));
+      actions.appendChild(openBtn);
+
+      const delBtn = document.createElement("button");
+      delBtn.type = "button";
+      delBtn.className = "btn btn-danger";
+      delBtn.textContent = "Delete";
+      delBtn.addEventListener("click", () => deleteJob(job.id));
+      actions.appendChild(delBtn);
+
+      card.appendChild(actions);
+      jobsList.appendChild(card);
+    });
+  }
+
+  function openJob(id) {
+    const jobs = loadJobs();
+    const job = jobs.find((j) => j.id === id);
+    if (!job) return;
+
+    applyStateToForm(job.state);
+    currentJobId = id;
+    recalcAll();
+    renderJobsList();
+    jobsPanel.classList.add("hidden");
+    updateJobStatus(`Opened "${job.clientName || job.category || "job"}".`);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function deleteJob(id) {
+    if (!confirm("Delete this saved job? This cannot be undone.")) return;
+    const jobs = loadJobs().filter((j) => j.id !== id);
+    persistJobs(jobs);
+    if (currentJobId === id) currentJobId = null;
+    renderJobsList();
+  }
+
+  function saveCurrentJob() {
+    const state = buildStateSnapshot();
+    const jobs = loadJobs();
+    const summary = {
+      category: state.fields.jobCategory || "",
+      clientName: state.fields.clientName || "",
+      jobAddress: state.fields.jobAddress || "",
+      estimateNumber: state.fields.estimateNumber || "",
+      total: calcGrandTotalFromState(state),
+    };
+
+    const existingIdx = currentJobId ? jobs.findIndex((j) => j.id === currentJobId) : -1;
+    if (existingIdx >= 0) {
+      jobs[existingIdx] = { ...jobs[existingIdx], ...summary, state, savedAt: new Date().toISOString() };
+    } else {
+      currentJobId = generateJobId();
+      jobs.push({ id: currentJobId, ...summary, state, savedAt: new Date().toISOString() });
+    }
+
+    persistJobs(jobs);
+    renderJobsList();
+    updateJobStatus(
+      `Saved${summary.category ? " " + summary.category : ""} job${summary.clientName ? " for " + summary.clientName : ""}.`
+    );
+  }
+
+  myJobsBtn.addEventListener("click", () => {
+    const opening = jobsPanel.classList.contains("hidden");
+    jobsPanel.classList.toggle("hidden");
+    if (opening) renderJobsList();
+  });
+  closeJobsPanel.addEventListener("click", () => jobsPanel.classList.add("hidden"));
+  jobsFilter.addEventListener("change", renderJobsList);
+  saveJobBtn.addEventListener("click", saveCurrentJob);
 
   // --- AI Photo Estimate ---
 

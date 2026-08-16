@@ -64,6 +64,125 @@ body {
 .btn-danger { background: transparent; color: var(--danger); border: 1px solid var(--danger); }
 .btn-danger:hover { background: #fbeae6; }
 
+.hidden { display: none !important; }
+
+.job-status {
+  max-width: 900px;
+  margin: -10px auto 14px;
+  min-height: 1.1em;
+  font-size: 0.85rem;
+  color: #1a7a3d;
+  font-weight: 600;
+}
+
+.jobs-panel {
+  max-width: 900px;
+  margin: 0 auto 20px;
+  background: var(--panel);
+  border-radius: 12px;
+  padding: 18px 24px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+.jobs-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.jobs-panel-header h2 {
+  font-size: 1.05rem;
+  margin: 0;
+  flex: 1;
+}
+
+.jobs-filter-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.jobs-filter-label select {
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.85rem;
+}
+
+.jobs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.jobs-empty {
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin: 8px 0;
+}
+
+.job-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  flex-wrap: wrap;
+}
+
+.job-card-active {
+  border-color: var(--accent);
+  background: #f6faff;
+}
+
+.job-card-info {
+  min-width: 0;
+  flex: 1;
+}
+
+.job-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.category-tag {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.job-card-meta {
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.job-card-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.job-card-actions .btn {
+  padding: 6px 10px;
+  font-size: 0.78rem;
+}
+
 .estimate {
   background: var(--panel);
   border-radius: 12px;

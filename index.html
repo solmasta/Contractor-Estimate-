@@ -14,10 +14,27 @@
     <div class="header-actions">
       <button id="addLaborRow" class="btn btn-secondary" type="button">+ Labor Line</button>
       <button id="addMaterialRow" class="btn btn-secondary" type="button">+ Material Line</button>
+      <button id="myJobsBtn" class="btn btn-secondary" type="button">My Jobs</button>
+      <button id="saveJobBtn" class="btn btn-secondary" type="button">Save Job</button>
       <button id="printBtn" class="btn btn-primary" type="button">Print / Save PDF</button>
-      <button id="resetBtn" class="btn btn-danger" type="button">Reset</button>
+      <button id="resetBtn" class="btn btn-danger" type="button">New Job</button>
     </div>
   </header>
+
+  <div id="jobStatus" class="job-status no-print"></div>
+
+  <section id="jobsPanel" class="jobs-panel no-print hidden">
+    <div class="jobs-panel-header">
+      <h2>Saved Jobs</h2>
+      <label class="jobs-filter-label">Category
+        <select id="jobsFilter">
+          <option value="">All Categories</option>
+        </select>
+      </label>
+      <button type="button" id="closeJobsPanel" class="btn btn-secondary">Close</button>
+    </div>
+    <div id="jobsList" class="jobs-list"></div>
+  </section>
 
   <main class="estimate">
 
@@ -36,6 +53,27 @@
       </div>
       <div class="meta-block">
         <h2>Details</h2>
+        <label>Category
+          <input type="text" id="jobCategory" list="categoryOptions" placeholder="e.g. Plumbing, Roofing, Remodel">
+          <datalist id="categoryOptions">
+            <option value="Plumbing">
+            <option value="Electrical">
+            <option value="HVAC">
+            <option value="Roofing">
+            <option value="Remodeling">
+            <option value="Kitchen Remodel">
+            <option value="Bathroom Remodel">
+            <option value="Flooring">
+            <option value="Painting">
+            <option value="Drywall">
+            <option value="Concrete">
+            <option value="Landscaping">
+            <option value="Fencing / Decking">
+            <option value="Windows & Doors">
+            <option value="General Contracting">
+            <option value="Handyman">
+          </datalist>
+        </label>
         <label>Estimate #
           <input type="text" id="estimateNumber" placeholder="EST-1001">
         </label>
