@@ -253,6 +253,12 @@ textarea { resize: vertical; }
   text-align: right;
 }
 
+.suggestion-source {
+  font-size: 0.72rem;
+  color: var(--muted);
+  margin: -2px 0 6px 26px;
+}
+
 .line-section {
   margin-bottom: 24px;
 }

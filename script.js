@@ -10,10 +10,11 @@
     "companyName", "companyContact", "companyAddress",
     "clientName", "jobAddress", "clientContact",
     "estimateNumber", "estimateDate", "validUntil",
-    "jobDescription", "notes", "markupPct", "taxPct", "marketArea"
+    "jobDescription", "notes", "markupPct", "taxPct", "marketArea", "pricingZip"
   ];
 
   const DEFAULT_MARKET_AREA = "Chicagoland (Chicago Metro Area), IL";
+  const DEFAULT_PRICING_ZIP = "60463";
 
   const currency = (n) =>
     n.toLocaleString("en-US", { style: "currency", currency: "USD" });
@@ -161,6 +162,8 @@
         el.value = "0";
       } else if (id === "marketArea") {
         el.value = DEFAULT_MARKET_AREA;
+      } else if (id === "pricingZip") {
+        el.value = DEFAULT_PRICING_ZIP;
       } else {
         el.value = "";
       }
@@ -205,6 +208,10 @@
   const marketAreaField = document.getElementById("marketArea");
   if (!marketAreaField.value.trim()) {
     marketAreaField.value = DEFAULT_MARKET_AREA;
+  }
+  const pricingZipField = document.getElementById("pricingZip");
+  if (!pricingZipField.value.trim()) {
+    pricingZipField.value = DEFAULT_PRICING_ZIP;
   }
 
   recalcAll();
@@ -274,6 +281,7 @@
           images: selectedPhotos,
           context: photoContext.value.trim(),
           marketArea: document.getElementById("marketArea").value.trim(),
+          pricingZip: document.getElementById("pricingZip").value.trim(),
         }),
       });
 
@@ -344,7 +352,17 @@
       row.appendChild(cost);
     }
 
-    return row;
+    const fragment = document.createDocumentFragment();
+    fragment.appendChild(row);
+
+    if (kind === "material" && item.source) {
+      const source = document.createElement("div");
+      source.className = "suggestion-source";
+      source.textContent = item.source === "estimated" ? "Estimated (no exact match found)" : `Priced from ${item.source}`;
+      fragment.appendChild(source);
+    }
+
+    return fragment;
   }
 
   function buildSuggestionGroup(title, items, kind) {

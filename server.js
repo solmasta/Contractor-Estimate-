@@ -41,8 +41,12 @@ const ESTIMATE_SCHEMA = {
           description: { type: "string" },
           qty: { type: "number" },
           unitCost: { type: "number" },
+          source: {
+            type: "string",
+            description: "Where the price came from, e.g. 'Home Depot', 'Menards', or 'estimated' if no real listing was found.",
+          },
         },
-        required: ["description", "qty", "unitCost"],
+        required: ["description", "qty", "unitCost", "source"],
         additionalProperties: false,
       },
     },
@@ -53,7 +57,7 @@ const ESTIMATE_SCHEMA = {
 
 app.post("/api/estimate-photo", async (req, res) => {
   try {
-    const { images, context, marketArea } = req.body || {};
+    const { images, context, marketArea, pricingZip } = req.body || {};
 
     if (!Array.isArray(images) || images.length === 0) {
       return res.status(400).json({ error: "At least one photo is required." });
@@ -75,36 +79,63 @@ app.post("/api/estimate-photo", async (req, res) => {
     const promptText = [
       "You are helping a contractor prepare a job estimate from photos of a job site.",
       "Look at the photo(s) and identify the work that needs to be done.",
-      "Suggest realistic labor line items (a short description, estimated hours, and a reasonable hourly rate in USD) and material line items (a short description, estimated quantity, and a reasonable unit cost in USD).",
+      "Suggest realistic labor line items (a short description, estimated hours, and a reasonable hourly rate in USD) and material line items (a short description and an estimated quantity needed).",
       marketArea
-        ? `Price labor and materials for the ${marketArea} market specifically - use current local rates for that area, not generic national averages.`
+        ? `Price labor for the ${marketArea} market specifically - use current local rates for that area, not generic national averages.`
         : "",
+      "For each material, use the web_search tool to look up its current price on homedepot.com or menards.com (prefer Home Depot when both carry it)" +
+        (pricingZip ? `, near ZIP code ${pricingZip}.` : "."),
+      "Use the real price you find as the material's unitCost, and set its `source` field to 'Home Depot' or 'Menards' accordingly. If a search turns up no specific matching product, use a reasonable estimate and set `source` to 'estimated'.",
       "Base your estimate on what is visibly needed. Keep line items concise and specific to what you see - do not invent work that isn't shown.",
       context ? `Additional context from the contractor: ${context}` : "",
     ]
       .filter(Boolean)
       .join("\n");
 
-    const response = await client.messages.create({
+    const requestParams = {
       model: "claude-opus-5",
-      max_tokens: 2048,
+      max_tokens: 4096,
       output_config: {
-        effort: "medium",
+        effort: "high",
         format: { type: "json_schema", schema: ESTIMATE_SCHEMA },
       },
-      messages: [
+      tools: [
         {
-          role: "user",
-          content: [...imageBlocks, { type: "text", text: promptText }],
+          type: "web_search_20260209",
+          name: "web_search",
+          max_uses: 6,
+          allowed_domains: ["homedepot.com", "menards.com"],
+          ...(pricingZip
+            ? { user_location: { type: "approximate", city: "Chicago", region: "Illinois", country: "US" } }
+            : {}),
         },
       ],
-    });
+    };
+    const userMessage = {
+      role: "user",
+      content: [...imageBlocks, { type: "text", text: promptText }],
+    };
+
+    let response = await client.messages.create({ ...requestParams, messages: [userMessage] });
+
+    // The web search tool runs its own server-side loop with a default cap of
+    // 10 iterations; if a lot of searching was needed, resume automatically
+    // rather than returning a truncated mid-search response.
+    let resumes = 0;
+    while (response.stop_reason === "pause_turn" && resumes < 3) {
+      response = await client.messages.create({
+        ...requestParams,
+        messages: [userMessage, { role: "assistant", content: response.content }],
+      });
+      resumes++;
+    }
 
     if (response.stop_reason === "refusal") {
       return res.status(422).json({ error: "The AI declined to analyze these photos." });
     }
 
-    const textBlock = response.content.find((block) => block.type === "text");
+    const textBlocks = response.content.filter((block) => block.type === "text");
+    const textBlock = textBlocks[textBlocks.length - 1];
     if (!textBlock) {
       return res.status(502).json({ error: "The AI did not return a usable response." });
     }
