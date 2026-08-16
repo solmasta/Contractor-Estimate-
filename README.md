@@ -8,7 +8,7 @@ frontend and a small Express backend that keeps your Anthropic API key server-si
 
 ```bash
 npm install
-export ANTHROPIC_API_KEY=your-api-key-here   # optional, only needed for AI Photo Estimate
+export APP_SECRET=your-anthropic-api-key-here   # optional, only needed for AI Photo Estimate
 ```
 
 See `.env.example` for the required environment variable.
@@ -23,7 +23,7 @@ See `.env.example` for the required environment variable.
 
 To enable AI Photo Estimate inside the Codespace, add your key as a secret **before** creating
 the codespace: repo **Settings → Secrets and variables → Codespaces → New repository secret**,
-named `ANTHROPIC_API_KEY`. Without it, everything else still works — you'll just see a warning
+named `APP_SECRET`. Without it, everything else still works — you'll just see a warning
 in the server log and AI Photo Estimate requests will fail.
 
 If you edit code inside the Codespace, either re-run `npm run build` and restart `npm start`,
