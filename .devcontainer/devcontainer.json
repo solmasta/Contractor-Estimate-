@@ -1,0 +1,21 @@
+{
+  "name": "Contractor Estimate",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:20",
+
+  "postCreateCommand": "npm install && npm run build",
+  "postStartCommand": "npm start > /tmp/contractor-estimate.log 2>&1 &",
+
+  "forwardPorts": [3000],
+  "portsAttributes": {
+    "3000": {
+      "label": "Contractor Estimate App",
+      "onAutoForward": "openPreview"
+    }
+  },
+
+  "customizations": {
+    "vscode": {
+      "extensions": ["dbaeumer.vscode-eslint"]
+    }
+  }
+}
