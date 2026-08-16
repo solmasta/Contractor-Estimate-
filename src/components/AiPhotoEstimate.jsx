@@ -4,13 +4,46 @@ import { clampNonNegative } from "../lib/calculations";
 
 const MAX_PHOTOS = 4;
 
-function readFileAsDataURL(file) {
+// Claude's vision input is capped at ~1568px on the long edge internally: larger
+// images are downscaled before analysis anyway, so resizing to this size client-side
+// loses no analysis quality while cutting the base64 payload (and Vercel's 4.5MB /
+// 60s limits) way down versus a full-resolution phone photo.
+const MAX_DIMENSION = 1568;
+const JPEG_QUALITY = 0.85;
+
+function loadImage(src) {
   return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = src;
   });
+}
+
+async function resizeImageFile(file) {
+  const objectUrl = URL.createObjectURL(file);
+  try {
+    const img = await loadImage(objectUrl);
+    let { width, height } = img;
+
+    if (width > MAX_DIMENSION || height > MAX_DIMENSION) {
+      if (width >= height) {
+        height = Math.round((height * MAX_DIMENSION) / width);
+        width = MAX_DIMENSION;
+      } else {
+        width = Math.round((width * MAX_DIMENSION) / height);
+        height = MAX_DIMENSION;
+      }
+    }
+
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    canvas.getContext("2d").drawImage(img, 0, 0, width, height);
+    return canvas.toDataURL("image/jpeg", JPEG_QUALITY);
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
 }
 
 export default function AiPhotoEstimate({
@@ -27,7 +60,7 @@ export default function AiPhotoEstimate({
     const files = Array.from(e.target.files || []).slice(0, MAX_PHOTOS);
     const next = [];
     for (const file of files) {
-      const dataUrl = await readFileAsDataURL(file);
+      const dataUrl = await resizeImageFile(file);
       const match = dataUrl.match(/^data:(.+);base64,(.*)$/);
       if (!match) continue;
       const [, mediaType, data] = match;
