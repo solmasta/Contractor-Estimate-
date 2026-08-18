@@ -121,3 +121,5 @@ Open http://localhost:3000.
 - AI Photo Estimate: upload job-site photos and get suggested labor/material line items, with
   material prices looked up live from Home Depot and Menards (requires the API key above)
 - Print / Save PDF export
+- Installable as a PWA — from the deployed site, use your browser's "Install app" / "Add to Home
+  Screen" option to get an app icon and standalone window, with offline access to the app shell
