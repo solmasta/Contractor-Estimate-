@@ -59,17 +59,29 @@ export default function AiPhotoEstimate({
   const handleFileChange = useCallback(async (e) => {
     const files = Array.from(e.target.files || []).slice(0, MAX_PHOTOS);
     const next = [];
+    const failed = [];
     for (const file of files) {
-      const dataUrl = await resizeImageFile(file);
-      const match = dataUrl.match(/^data:(.+);base64,(.*)$/);
-      if (!match) continue;
-      const [, mediaType, data] = match;
-      next.push({ data, mediaType, previewUrl: dataUrl, name: file.name });
+      try {
+        const dataUrl = await resizeImageFile(file);
+        const match = dataUrl.match(/^data:(.+);base64,(.*)$/);
+        if (!match) {
+          failed.push(file.name);
+          continue;
+        }
+        const [, mediaType, data] = match;
+        next.push({ data, mediaType, previewUrl: dataUrl, name: file.name });
+      } catch {
+        failed.push(file.name);
+      }
     }
     setPhotos(next);
     setSummary("");
     setSuggestions([]);
-    setStatus({ text: "", type: "" });
+    setStatus(
+      failed.length > 0
+        ? { text: `Couldn't load ${failed.join(", ")}. Try a JPEG or PNG instead.`, type: "error" }
+        : { text: "", type: "" }
+    );
   }, []);
 
   const handleAnalyze = useCallback(async () => {
